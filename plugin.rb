@@ -26,7 +26,8 @@ after_initialize do
     skip_before_action :preload_json, :check_xhr
 
     def topics_query(since = nil)
-      category_ids = Category.where(read_restricted: false).pluck(:id)
+      category_ids = Category.where(read_restricted: false)
+        .where.not(slug: skip_categories).pluck(:id)
       query = Topic.where(category_id: category_ids, visible: true)
       if since
         query = query.where('last_posted_at > ?', since)
@@ -125,6 +126,10 @@ after_initialize do
 
     def sitemap_size
       @sitemap_size ||= SiteSetting.sitemap_topics_per_page
+    end
+
+    def skip_categories
+      @skip_categories ||= (SiteSetting.sitemap_skip_categories||'').split(',')
     end
   end
 
